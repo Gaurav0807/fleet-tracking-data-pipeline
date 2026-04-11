@@ -72,8 +72,8 @@ resource "aws_iam_role_policy" "lambda_glue" {
         ]
         Resource = [
           "arn:aws:glue:${var.aws_region}:${local.account_id}:catalog",
-          "arn:aws:glue:${var.aws_region}:${local.account_id}:database/${local.prefix}-db",
-          "arn:aws:glue:${var.aws_region}:${local.account_id}:table/${local.prefix}-db/*"
+          "arn:aws:glue:${var.aws_region}:${local.account_id}:database/fleet-bronze-db",
+          "arn:aws:glue:${var.aws_region}:${local.account_id}:table/fleet-bronze-db/*"
         ]
       }
     ]
@@ -96,37 +96,12 @@ resource "aws_lambda_function" "consumer" {
   environment {
     variables = {
       DATA_BUCKET   = var.data_bucket
-      GLUE_DATABASE = aws_glue_catalog_database.fleet_db.name
+      GLUE_DATABASE = aws_glue_catalog_database.bronze_db.name
       GLUE_TABLE    = "bronze_vehicle_events"
     }
   }
 }
 
-
-# --- Lake Formation Permissions ---
-# Lake Formation adds an extra permission layer on top of IAM.
-# Without these, Lambda gets AccessDeniedException even with IAM Glue permissions.
-
-# Permission on the database (CREATE_TABLE, DESCRIBE)
-resource "aws_lakeformation_permissions" "lambda_database" {
-  principal   = aws_iam_role.lambda_consumer.arn
-  permissions = ["CREATE_TABLE", "DESCRIBE"]
-
-  database {
-    name = aws_glue_catalog_database.fleet_db.name
-  }
-}
-
-# Permission on all tables in the database (DESCRIBE, ALTER, INSERT)
-resource "aws_lakeformation_permissions" "lambda_tables" {
-  principal   = aws_iam_role.lambda_consumer.arn
-  permissions = ["ALL"]
-
-  table {
-    database_name = aws_glue_catalog_database.fleet_db.name
-    wildcard      = true
-  }
-}
 
 # SQS read — Lambda needs to poll messages from SQS
 resource "aws_iam_role_policy" "lambda_sqs" {

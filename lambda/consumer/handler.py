@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 s3_client = boto3.client("s3")
 glue_client = boto3.client("glue")
 
-# Single bucket — all layers live under different prefixes
+
 DATA_BUCKET = os.environ["DATA_BUCKET"]
 GLUE_DATABASE = os.environ["GLUE_DATABASE"]
 GLUE_TABLE = os.environ.get("GLUE_TABLE", "bronze_vehicle_events")
@@ -121,7 +121,7 @@ def ensure_glue_table():
 
 
 def register_partition(year: int, month: int, day: int, hour: int):
-    """Register a new partition in Glue so Athena can query it."""
+
     partition_path = f"s3://{DATA_BUCKET}/{BRONZE_PREFIX}/year={year}/month={month:02d}/day={day:02d}/hour={hour:02d}/"
 
     try:
@@ -154,25 +154,10 @@ def register_partition(year: int, month: int, day: int, hour: int):
 
 
 def handler(event, context):
-    """
-    Lambda entry point. Triggered by SQS.
 
-    Message chain (3 layers to unwrap):
-      SQS record -> body contains SNS notification
-      SNS notification -> "Message" contains S3 event
-      S3 event -> "Records" contains bucket + key info
-
-    Flow:
-      1. Unwrap SQS -> SNS -> S3 event
-      2. Read JSON from S3 (raw/ prefix)
-      3. Convert to Parquet
-      4. Write to S3 (bronze/ prefix)
-      5. Ensure Glue table exists
-      6. Register partition in Glue catalog
-    """
     processed = 0
 
-    # Ensure the Glue table exists on first run
+
     ensure_glue_table()
 
     for sqs_record in event["Records"]:
