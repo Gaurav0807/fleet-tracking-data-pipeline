@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 s3_client = boto3.client("s3")
 glue_client = boto3.client("glue")
 
-
+# Single bucket — all layers live under different prefixes
 DATA_BUCKET = os.environ["DATA_BUCKET"]
 GLUE_DATABASE = os.environ["GLUE_DATABASE"]
 GLUE_TABLE = os.environ.get("GLUE_TABLE", "bronze_vehicle_events")
@@ -91,9 +91,6 @@ def convert_to_parquet(records: list[dict]) -> bytes:
 def ensure_glue_table():
     """Create the Glue table if it doesn't exist yet."""
     try:
-        glue_client.get_table(DatabaseName=GLUE_DATABASE, Name=GLUE_TABLE)
-        logger.info(f"Glue table {GLUE_DATABASE}.{GLUE_TABLE} already exists")
-    except glue_client.exceptions.EntityNotFoundException:
         glue_client.create_table(
             DatabaseName=GLUE_DATABASE,
             TableInput={
@@ -118,11 +115,15 @@ def ensure_glue_table():
             },
         )
         logger.info(f"Created Glue table {GLUE_DATABASE}.{GLUE_TABLE}")
+    except glue_client.exceptions.AlreadyExistsException:
+        logger.info(f"Glue table {GLUE_DATABASE}.{GLUE_TABLE} already exists")
 
 
 def register_partition(year: int, month: int, day: int, hour: int):
-
+    #no msck repair table required 
     partition_path = f"s3://{DATA_BUCKET}/{BRONZE_PREFIX}/year={year}/month={month:02d}/day={day:02d}/hour={hour:02d}/"
+
+
 
     try:
         glue_client.get_partition(
@@ -154,23 +155,28 @@ def register_partition(year: int, month: int, day: int, hour: int):
 
 
 def handler(event, context):
+    """
 
+      SQS record -> body contains SNS notification
+      SNS notification -> "Message" contains S3 event
+      S3 event -> "Records" contains bucket + key info
+
+    """
     processed = 0
 
 
     ensure_glue_table()
 
     for sqs_record in event["Records"]:
-        # Layer 1: SQS body contains the SNS message
+
         sns_message = json.loads(sqs_record["body"])
 
-        # Layer 2: SNS "Message" contains the S3 event notification
+
         s3_event = json.loads(sns_message["Message"])
 
         for s3_record in s3_event.get("Records", []):
             source_bucket = s3_record["s3"]["bucket"]["name"]
-            # S3 event notifications URL-encode the key (= becomes %3D, spaces become +)
-            # Must decode before calling GetObject
+
             source_key = unquote_plus(s3_record["s3"]["object"]["key"])
 
             logger.info(f"Processing s3://{source_bucket}/{source_key}")
@@ -184,10 +190,10 @@ def handler(event, context):
                 logger.warning(f"No records in {source_key}, skipping")
                 continue
 
-            # 2. Convert to Parquet
+
             parquet_bytes = convert_to_parquet(records)
 
-            # 3. Write to bronze/ prefix with Hive-style partitioning
+
             now = datetime.now(timezone.utc)
             bronze_key = (
                 f"{BRONZE_PREFIX}/"
@@ -204,7 +210,7 @@ def handler(event, context):
             )
             logger.info(f"Wrote {len(records)} records -> s3://{DATA_BUCKET}/{bronze_key}")
 
-            # 4. Register partition in Glue catalog
+
             register_partition(now.year, now.month, now.day, now.hour)
 
             processed += 1

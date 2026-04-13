@@ -46,7 +46,7 @@ resource "aws_sqs_queue_policy" "allow_sns" {
   })
 }
 
-# --- Subscribe SQS to SNS ---
+#  Subscribe SQS to SNS 
 resource "aws_sns_topic_subscription" "sqs_sub" {
   topic_arn = aws_sns_topic.s3_events.arn
   protocol  = "sqs"
