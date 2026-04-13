@@ -20,7 +20,7 @@ variable "environment" {
 variable "data_bucket" {
     description = "Single S3 bucket for all layers"
     type        = string
-    default     = "gaurav-hudi-data"
+    default     = ""
 }
 
 variable "pyarrow_layer_arn" {

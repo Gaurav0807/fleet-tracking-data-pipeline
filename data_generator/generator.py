@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 fake = Faker()
 s3_client = boto3.client("s3")
 
-S3_BUCKET = "gaurav-hudi-data"  # change after terraform apply
+S3_BUCKET = ""  # change after terraform apply
 S3_PREFIX = "raw/vehicle_events"
 NUM_VEHICLES = 50
 BATCH_SIZE = 10          # events per batch
