@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: gold_daily_vehicle_stats
+    description: "Daily aggregated stats per vehicle"
+  - name: gold_driver_scorecard
+    description: "All-time driver performance scorecard"
+  - name: gold_fleet_summary
+    description: "Fleet-wide daily summary metrics"

@@ -1,0 +1,22 @@
+name: fleet_pulse
+version: '1.0.0'
+
+profile: fleet_pulse
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  fleet_pulse:
+    staging:
+      +materialized: view
+      +schema: fleet-bronze-db
+    silver:
+      +materialized: table
+      +schema: fleet-silver-db
+      +file_format: parquet
+    gold:
+      +materialized: table
+      +schema: fleet-gold-db
+      +file_format: parquet

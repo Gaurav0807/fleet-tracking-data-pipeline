@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: stg_vehicle_events
+    description: "Cleaned vehicle events — casts timestamp, filters nulls"
+    columns:
+      - name: event_id
+        tests:
+          - not_null

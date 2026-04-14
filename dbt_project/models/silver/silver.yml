@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: silver_cleaned_events
+    description: "Deduplicated and enriched vehicle events"
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+
+  - name: silver_vehicle_trips
+    description: "Trip-level aggregation per vehicle per day per status"
+    columns:
+      - name: trip_id
+        tests:
+          - unique
+          - not_null

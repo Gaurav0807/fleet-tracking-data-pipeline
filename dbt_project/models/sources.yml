@@ -1,0 +1,37 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: fleet-bronze-db
+    tables:
+      - name: bronze_vehicle_events
+        description: "Raw vehicle telemetry events written by Lambda as Parquet"
+        columns:
+          - name: event_id
+            description: "Unique event identifier (UUID)"
+          - name: vehicle_id
+            description: "Vehicle identifier (VH-XXXXXXXX)"
+          - name: driver_name
+            description: "Driver full name"
+          - name: vehicle_type
+            description: "truck, van, bike, or car"
+          - name: timestamp
+            description: "ISO 8601 UTC timestamp string"
+          - name: latitude
+            description: "GPS latitude"
+          - name: longitude
+            description: "GPS longitude"
+          - name: speed_kmh
+            description: "Speed in km/h"
+          - name: fuel_level_pct
+            description: "Fuel level percentage (5-100)"
+          - name: engine_temp_celsius
+            description: "Engine temperature in Celsius"
+          - name: odometer_km
+            description: "Total distance on odometer"
+          - name: trip_status
+            description: "en_route, idle, loading, unloading, returning"
+          - name: is_speed_violation
+            description: "True if speed > 80 km/h"
+          - name: cargo_weight_kg
+            description: "Cargo weight (0 for bikes/cars)"

@@ -1,0 +1,12 @@
+fleet_pulse:
+  target: dev
+  outputs:
+    dev:
+      type: athena
+      s3_staging_dir: s3://bucket-data/athena-results/
+      s3_data_dir: s3://bucket-data/
+      region_name: us-east-1
+      database: awsdatacatalog
+      schema: fleet-silver-db
+      work_group: primary
+      num_retries: 3
