@@ -1,6 +1,8 @@
 {{
     config(
-        materialized='table',
+        materialized='incremental',
+        incremental_strategy='insert_overwrite',
+        partition_by=['event_date'],
         s3_data_naming='schema_table_unique'
     )
 }}
@@ -10,6 +12,10 @@ with deduplicated as (
         *,
         row_number() over (partition by event_id order by event_timestamp desc) as row_num
     from {{ ref('stg_vehicle_events') }}
+    
+    {% if is_incremental() %}
+      where cast(event_timestamp as date) >= date_add('day', -1, current_date)
+    {% endif %}
 )
 
 select

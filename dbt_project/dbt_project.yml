@@ -16,7 +16,23 @@ models:
       +materialized: table
       +schema: fleet-silver-db
       +file_format: parquet
+      +post_hook: >
+        INSERT INTO "fleet-silver-db"."dbt_audit_log"
+        SELECT
+          '{{ this.name }}',
+          current_timestamp,
+          COUNT(*),
+          'SUCCESS'
+        FROM "{{ this.schema }}"."{{ this.identifier }}"
     gold:
       +materialized: table
       +schema: fleet-gold-db
       +file_format: parquet
+      +post_hook: >
+        INSERT INTO "fleet-silver-db"."dbt_audit_log"
+        SELECT
+          '{{ this.name }}',
+          current_timestamp,
+          COUNT(*),
+          'SUCCESS'
+        FROM "{{ this.schema }}"."{{ this.identifier }}"
